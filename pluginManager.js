@@ -13,6 +13,9 @@ const path = require("path");
 class PluginManager {
   plugins = [];
   constructor(p = "./plugins/", logger = console, context = {}) {
+    if (!fs.existsSync(path.join(__dirname, p))) {
+      fs.mkdirSync(path.join(__dirname, p));
+    }
     const plugins = fs.readdirSync(path.join(__dirname, p));
     plugins.forEach((v) => {
       try {

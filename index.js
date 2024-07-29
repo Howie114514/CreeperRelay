@@ -1103,11 +1103,6 @@ async function main() {
         try {
           switch (name) {
             case "start_game":
-              if (settings.force_achievement_enabled) {
-                params.achievements_disabled = true;
-              } else {
-                params.achievements_disabled = false;
-              }
               Object.assign(gameData, params);
               break;
             case "game_rules_changed":
