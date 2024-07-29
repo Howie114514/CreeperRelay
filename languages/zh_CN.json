@@ -1,0 +1,10 @@
+{
+  "app.name": "苦力怕代理",
+  "app.name.ingame": "\u00a7a\u00a7l苦力怕代理\u00a7r",
+  "server.closing": "正在关闭服务器",
+  "server.closed": "服务器正常关闭",
+  "server.closed.message": "代理服务器已关闭",
+  "command.seed.desc": "获取种子",
+  "command.seed.result": "种子:%s",
+  "command.af.desc": "自动钓鱼"
+}

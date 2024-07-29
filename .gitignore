@@ -1,0 +1,8 @@
+node_modules/
+plugins/
+logs/
+notebot/
+mcfunctions/
+songs/
+package-lock.json
+relay.zip

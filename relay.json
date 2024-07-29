@@ -1,0 +1,11 @@
+{
+  "allowOtherIP": false,
+  "serverHost": "mcbirds.com",
+  "serverPort": 15335,
+  "realms": {
+    "enabled": true,
+    "name": "原版生存 进群调成员",
+    "motd": ".*"
+  },
+  "languag": "zh_CN"
+}

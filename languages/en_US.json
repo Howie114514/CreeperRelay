@@ -1,0 +1,16 @@
+{
+  "app.name": "CreeperRelay",
+  "app.name.ingame": "\u00a7a\u00a7lCreeperRelay\u00a7r",
+  "msg.toast.welcome": "You are playing this server through Creeper Relay!\nType '.help' to view the available commands!",
+  "player.spawned": "Player spawned",
+  "player.connected": "Player connected: %s",
+  "player.disconnected": "Player disconnected: %s - %s",
+  "player.login": "Please login by the following link:",
+  "server.started": "Server started successfully.",
+  "server.closing": "Closing server...",
+  "server.closed": "Server closed correctly.",
+  "server.closed.message": "Server closed",
+  "command.seed.desc": "Get seed",
+  "command.seed.result": "Seed:%s",
+  "command.af.desc": "Autofish"
+}
