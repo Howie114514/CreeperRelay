@@ -505,17 +505,6 @@ commandMgr.registerCommand(
   )
 );
 
-commandMgr.registerCommand(
-  new Command(
-    "plugin",
-    "未实装的插件系统",
-    () => {
-      commandMgr.emit("error", "尚未实装该命令。");
-    },
-    [argumentTypes.enum(["load", "reload", "debug"])]
-  )
-);
-
 var freeCam = false;
 var cameraPos = { x: 0, y: 0, z: 0 };
 var cameraRot = { x: 0, z: 0 };
