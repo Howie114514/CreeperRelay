@@ -144,6 +144,11 @@ declare export type CreeperRelayContext = {
         entityPlayers: Record<number | bigint, EntityPlayer>;
         events:EventEmitter<{"spawn","disconnect","tick"}>
 };
+config:{
+    getConfig<T extends Record>(fp:string,defaultConfig:T):T;
+}
 commandManager:CommandManager;
 getLogger():Logger;
+language:typeof import("./lang"),
+camera:typeof import("./camera")
 }

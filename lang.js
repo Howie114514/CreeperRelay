@@ -6,7 +6,7 @@ const languageFile = require(`./languages/${language}.json`);
 
 /**
  *
- * @param {keyof import("./languages/en_US.json")} key
+ * @param {keyof import("./languages/en_US.json")|string} key
  * @param  {...any} params
  * @returns
  */

@@ -341,6 +341,9 @@ const CRContext = {
   client: clientInstance,
   commandManager: commandMgr,
   getLogger: log4js.getLogger,
+  language: require("./lang"),
+  camera: require("./camera"),
+  config: require("./customConfig"),
 };
 const pluginManager = new PluginManager(
   "./plugins/",
@@ -1022,7 +1025,6 @@ async function main() {
     });
     let rapi = realms.RealmAPI.from(flow, "bedrock");
     await rapi.getRealms().then((rs) => {
-      console.log(rs);
       rs.forEach((r) => {
         if (config.realms.name == r.name) {
           realm = r;
@@ -1032,7 +1034,7 @@ async function main() {
       if (!realm) {
         logger.error("没有领域服匹配");
       }
-      logger.info("选中领域服：", realm);
+      logger.info("选中领域服：", realm.name);
       relay = new bedrock.Relay({
         host: "127.0.0.1",
         port: 19132,
