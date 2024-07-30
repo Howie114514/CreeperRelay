@@ -43,9 +43,9 @@ bash install.sh
 ## 升级Minecraft协议（mc更新时用）
 Windows:
 `
-update.bat
+update-protocol.bat
 `
 Linux/Android:
 `
-bash update.sh
+bash update-protocol.sh
 `

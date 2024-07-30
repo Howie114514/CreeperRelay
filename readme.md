@@ -44,9 +44,9 @@ bash install.sh
 ## Updating minecraft protocol
 Windows:
 `
-update.bat
+update-protocol.bat
 `
 Linux/Android:
 `
-bash update.sh
+bash update-protocol.sh
 `
