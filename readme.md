@@ -30,3 +30,23 @@ English|[简体中文](/readme-zh_cn.md)
 - [ ] Using resourcepacks
 - [ ] Sending forms
 - [ ] Decoding world data
+  
+## Installing
+Windows:
+`
+install.bat
+`
+Linux/Android:
+`
+bash install.sh
+`
+
+## Updating minecraft protocol
+Windows:
+`
+update.bat
+`
+Linux/Android:
+`
+bash update.sh
+`

@@ -1,4 +1,5 @@
 # 苦力怕代理
+### 一个用于Minecraft:Bedrock Edition的MITM服务器
 
 ![Node version](https://img.shields.io/badge/node-v18.16.0-blue)
 ![License](https://img.shields.io/badge/license-GPL%20v3-blue)
@@ -28,3 +29,23 @@
 - [ ] 使用资源包
 - [ ] 发送表单
 - [ ] 解析世界数据
+
+## 安装
+Windows:
+`
+install.bat
+`
+Linux/Android:
+`
+bash install.sh
+`
+
+## 升级Minecraft协议（mc更新时用）
+Windows:
+`
+update.bat
+`
+Linux/Android:
+`
+bash update.sh
+`

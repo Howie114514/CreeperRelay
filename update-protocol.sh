@@ -1,2 +1,2 @@
 #!/bin/bash
-npm update bedrock-protocol
+npm update --depth 999999
