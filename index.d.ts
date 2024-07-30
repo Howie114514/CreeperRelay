@@ -1,4 +1,4 @@
-import { Player } from "bedrock-protocol";
+import { Connection, Player } from "bedrock-protocol";
 import { Vector2, Vector3 } from "./math";
 import { CommandManager, CommandManager } from "./command";
 import {EventEmitter} from "events"
@@ -142,7 +142,8 @@ declare export type CreeperRelayContext = {
         swing(): void;
         players: Record<UUID, NetworkPlayer>;
         entityPlayers: Record<number | bigint, EntityPlayer>;
-        events:EventEmitter<{"spawn","disconnect","tick"}>
+        events:EventEmitter<{"spawn","disconnect","tick"}>;
+        connection:Connection;
 };
 config:{
     getConfig<T extends Record>(fp:string,defaultConfig:T):T;

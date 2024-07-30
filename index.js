@@ -1078,11 +1078,11 @@ async function main() {
      * @param {bedrock.Player} p
      */
     (p) => {
-      clientInstance.connection = p;
-      clientInstance.connection.setMaxListeners(114514);
-      world.setConnection(clientInstance.connection);
-      camera.connection = clientInstance.connection;
       logger.info(tr("player.connected", p.connection.address));
+      clientInstance.connection = p;
+      //clientInstance.connection.setMaxListeners(300);
+      //world.setConnection(clientInstance.connection);
+      camera.setConnection(clientInstance.connection);
       commandMgr.removeAllListeners();
       commandMgr.on("error", (...msg) => {
         clientInstance.showMessage("> \u00a7c", ...msg);

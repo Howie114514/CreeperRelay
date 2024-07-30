@@ -7,7 +7,7 @@ module.exports.camera = {
    * @type {Connection}
    */
   connection: undefined,
-  set connection(connection) {
+  setConnection(connection) {
     this.connection = connection;
     this.connection.on("clientbound", ({ name, params }, dest) => {
       if (name == "camera_presets") {

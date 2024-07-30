@@ -1,10 +1,9 @@
 {
   "configurations": [
     {
-      "name": "Launch via NPM",
+      "name": "Launch Program",
+      "program": "${workspaceFolder}/index.js",
       "request": "launch",
-      "runtimeArgs": ["run", "start"],
-      "runtimeExecutable": "npm",
       "skipFiles": ["<node_internals>/**"],
       "type": "node"
     }
