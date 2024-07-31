@@ -1,11 +1,11 @@
 {
   "allowOtherIP": false,
-  "serverHost": "mcbirds.com",
-  "serverPort": 15335,
+  "serverHost": "zeqa.net",
+  "serverPort": 19132,
   "realms": {
-    "enabled": true,
+    "enabled": false,
     "name": "原版生存 进群调成员",
     "motd": ".*"
   },
-  "languag": "zh_CN"
+  "language": "zh_CN"
 }

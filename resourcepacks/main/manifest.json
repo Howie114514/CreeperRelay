@@ -1,0 +1,17 @@
+{
+  "format_version": 1,
+  "header": {
+    "name": "CreeperRelay",
+    "description": "",
+    "uuid": "71324968-4cd5-463a-bd50-9d02bd4467e9",
+    "version": [1, 0, 0]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "description": "",
+      "uuid": "71596088-16ef-46c9-bea7-6226e2730305",
+      "version": [1, 0, 0]
+    }
+  ]
+}

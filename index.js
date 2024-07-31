@@ -5,7 +5,7 @@
 
 "use strict";
 
-//process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const isDevEnv = true;
 const VERSION = "1.0.0";
 
@@ -32,6 +32,15 @@ const { PluginManager } = require("./pluginManager");
 const path = require("path");
 const config = require("./config");
 const { tr } = require("./lang");
+const resourcepack = require("./resourcepack");
+const express = require("express");
+const webServer = express();
+webServer.use(
+  "/resourcepacks",
+  express.static(path.join(__dirname, "resourcepacks"))
+);
+webServer.listen(19133);
+const archiver = require("archiver");
 
 log4js.configure({
   appenders: {
@@ -54,6 +63,43 @@ const logger = log4js.getLogger("relay");
 const commandMgr = new CommandManager(log4js.getLogger("command"));
 world.logger = log4js.getLogger("world");
 
+logger.info("Packing resource packs");
+var resourcepackList = [];
+const resourcepacks = fs.readdirSync(path.join(__dirname, "resourcepacks"));
+resourcepacks.forEach((v) => {
+  try {
+    const isDir = fs
+      .statSync(path.join(__dirname, "resourcepacks", v))
+      .isDirectory();
+    if (isDir) {
+      const output = fs.createWriteStream(
+        path.join(__dirname, "resourcepacks", v + ".mcpack")
+      );
+      const archive = archiver("zip");
+      archive.on("error", (e) => {
+        logger.error(e);
+      });
+      archive.pipe(output);
+      archive.directory(path.join(__dirname, "resourcepacks", v), "/");
+      archive.finalize();
+      const size = fs.statSync(path.join(__dirname, "resourcepacks", v)).size;
+      resourcepackList.push({
+        manifest: JSON.parse(
+          fs
+            .readFileSync(
+              path.join(__dirname, "resourcepacks", v, "manifest.json")
+            )
+            .toString()
+        ),
+        size,
+        name: v,
+      });
+    }
+  } catch (err) {
+    logger.warn("Not a vaild pack:", err.stack);
+  }
+});
+
 /**
  * @type {import("prismarine-realms").Realm}
  */
@@ -62,6 +108,34 @@ let realm;
  * @type {bedrock.Relay}
  */
 var relay;
+var relayOptions = {
+  host: "127.0.0.1",
+  port: 19132,
+  forceSingle: true,
+  motd: {
+    motd: "\u00a7a\u00a7l苦力怕代理",
+    levelName: "服务器",
+  },
+  maxPlayers: 100,
+  onMsaCode: (res, c) => {
+    logger.info(
+      "请通过以下链接登陆您的Microsoft账户。\n",
+      (res.verification_uri + "?otc=" + res.user_code).underline.bold
+    );
+    c.queue("disconnect", {
+      reason: "disconnected",
+      hide_disconnect_reason: false,
+      message:
+        "请在后台查看链接并登录或进入" +
+        res.verification_uri +
+        "?otc=" +
+        res.user_code +
+        "进行登陆。",
+    });
+  },
+  raknetBackend: "raknet-native",
+  destination: {},
+};
 /**
  * @type {bedrock.Player}
  */
@@ -82,6 +156,9 @@ process.on("beforeExit", (s) => {
   process.exit(0);
 });
 
+/**
+ * @type {import(".").GameData}
+ */
 var gameData = {
   entity_id: undefined,
   runtime_entity_id: undefined,
@@ -169,6 +246,9 @@ var gameData = {
 };
 const hardcoded_dimensions = ["overworld", "nether", "end"];
 
+/**
+ * @type {import(".").ClientInstance}
+ */
 let clientInstance = {
   tick: 0,
   players: {},
@@ -1024,210 +1104,194 @@ async function main() {
         logger.error("没有领域服匹配");
       }
       logger.info("选中领域服：", realm.name);
-      relay = new bedrock.Relay({
-        host: "127.0.0.1",
-        port: 19132,
-        forceSingle: true,
-        motd: {
-          motd: "\u00a7a\u00a7l苦力怕代理",
-          levelName: `${config.realms.enabled ? "Realms" : "服务器"}:${
-            config.realms.enabled
-              ? realm.name
-              : config.serverHost + ":" + config.serverPort.toString()
-          }`,
-        },
-        maxPlayers: 1,
-        onMsaCode: (res, c) => {
-          logger.info(
-            "请通过以下链接登陆您的Microsoft账户。\n",
-            (res.verification_uri + "?otc=" + res.user_code).underline.bold
-          );
-          c.queue("disconnect", {
-            reason: "disconnected",
-            hide_disconnect_reason: false,
-            message:
-              "请在后台查看链接并登录或进入" +
-              res.verification_uri +
-              "?otc=" +
-              res.user_code +
-              "进行登陆。",
-          });
-        },
-        raknetBackend: "raknet-native",
-        destination: {
-          realms: {
-            realmId: realm.id.toString(),
-          },
-        },
-      });
+
+      relayOptions.destination.realm = {
+        realmId: realm.id.toString(),
+      };
     });
   } else {
-    relay = new bedrock.Relay({
-      host: "0.0.0.0",
-      port: 19132,
-      forceSingle: true,
-      destination: {
-        host: config.serverHost,
-        port: config.serverPort,
-      },
+    relayOptions.destination.host = config.serverHost;
+    relayOptions.destination.port = config.serverPort;
+  }
+}
+relay = new bedrock.Relay(relayOptions);
+relay.on(
+  "connect",
+  /**
+   * @param {bedrock.Player} p
+   */
+  (p) => {
+    logger.info(tr("player.connected", p.connection.address));
+    clientInstance.connection = p;
+    //clientInstance.connection.setMaxListeners(300);
+    //world.setConnection(clientInstance.connection);
+    camera.setConnection(clientInstance.connection);
+
+    commandMgr.removeAllListeners();
+    commandMgr.on("error", (...msg) => {
+      clientInstance.showMessage("> \u00a7c", ...msg);
+    });
+    commandMgr.on("message", (...msg) => {
+      clientInstance.showMessage("> ", ...msg);
+    });
+    p.on("clientbound", ({ name, params }, des) => {
+      try {
+        switch (name) {
+          case "start_game":
+            Object.assign(gameData, params);
+            break;
+          case "game_rules_changed":
+            gameData.gamerules = params.rules;
+            break;
+          case "mob_equipment":
+            if (
+              params.runtime_entity_id == gameData.runtime_entity_id &&
+              params.selected_slot == params.slot
+            )
+              gameData.selected_item = params.item;
+            gameData.selected_slot = params.selected_slot;
+            break;
+          case "play_status":
+            if (params.status == "player_spawn") {
+              clientInstance.events.emit("spawn");
+              clientInstance.sendToast(
+                tr("app.name.ingame"),
+                tr("msg.toast.welcome")
+              );
+              logger.info(tr("player.spawned"));
+            }
+            break;
+          case "disconnect":
+            logger.info(
+              tr(
+                "player.disconnected",
+                params.reason,
+                params.message ?? "(undefined)"
+              )
+            );
+            break;
+          case "player_list":
+            //logger.info("player_list:", params);
+            switch (params.records.type) {
+              case "add":
+                params.records.records.forEach((p) => {
+                  clientInstance.players[p.uuid] = p;
+                });
+                break;
+              case "remove":
+                params.records.records.forEach((p) => {
+                  delete clientInstance.players[p.uuid];
+                });
+                break;
+            }
+            break;
+          case "add_player":
+            clientInstance.players[params.uuid] = params;
+            clientInstance.entityPlayers[params.runtime_id] = params;
+            clientInstance.__playerByName_mappings[params.username] =
+              params.runtime_id;
+            break;
+          case "move_player":
+            if (clientInstance.entityPlayers[params.runtime_id]) {
+              clientInstance.entityPlayers[params.runtime_id].position =
+                params.position;
+              clientInstance.entityPlayers[params.runtime_id].dimension =
+                gameData.dimension;
+            }
+            break;
+          case "change_dimension":
+            gameData.dimension = hardcoded_dimensions[params.dimension];
+            break;
+          case "resource_packs_info":
+            resourcepackList.forEach((v) => {
+              params.resource_pack_links.push({
+                id: v.manifest.header.uuid,
+                url: `http://localhost:19133/resourcepacks/${v.name}.mcpack`,
+              });
+              params.texture_packs.push({
+                content_identity: v.manifest.header.uuid,
+                content_key: "",
+                has_scripts: false,
+                rtx_enabled: false,
+                size: [0, v.size],
+                sub_pack_name: "",
+                uuid: v.manifest.header.uuid,
+                version: v.manifest.header.version.join("."),
+              });
+            });
+
+            console.log("resource_packs_info", params);
+            break;
+        }
+      } catch (e) {
+        logger.error(e);
+      }
+    });
+
+    p.on("serverbound", ({ name, params }, des) => {
+      try {
+        if (name == "text") {
+          console.log(params);
+          des.canceled = commandMgr.run(params.message);
+        }
+        if (name == "command_request") {
+          logger.debug(params);
+        }
+        if (name == "player_auth_input") {
+          if (!freeCam) gameData.player_position = params.position;
+          else {
+            cameraPos = cameraPos.add(
+              new Vector3(
+                params.delta.x * cameraSpeed_,
+                params.input_data.sneaking
+                  ? -1
+                  : params.input_data.jumping
+                  ? 1
+                  : 0,
+                params.delta.z * cameraSpeed_
+              )
+            );
+            cameraRot = { x: params.pitch, z: params.head_yaw };
+            clientInstance.tp(
+              gameData.player_position,
+              params.pitch,
+              params.yaw,
+              params.head_yaw
+            );
+            //console.log(cameraPos)
+            camera.move(
+              { x: cameraPos.x, y: cameraPos.y, z: cameraPos.z },
+              cameraRot
+            );
+          }
+        }
+        if (name == "mob_equipment" && params.selected_slot == params.slot) {
+          gameData.selected_item = params.item;
+          gameData.selected_slot = params.selected_slot;
+        }
+        if (name == "inventory_transaction") {
+          console.log(params);
+        }
+        if (name == "adventure_settings") {
+          console.log(params);
+        }
+      } catch (e) {
+        logger.error(e);
+        clientInstance.showMessage("> \u00a7c", e.stack);
+      }
     });
   }
-  relay.on(
-    "connect",
-    /**
-     * @param {bedrock.Player} p
-     */
-    (p) => {
-      logger.info(tr("player.connected", p.connection.address));
-      clientInstance.connection = p;
-      //clientInstance.connection.setMaxListeners(300);
-      //world.setConnection(clientInstance.connection);
-      camera.setConnection(clientInstance.connection);
-      commandMgr.removeAllListeners();
-      commandMgr.on("error", (...msg) => {
-        clientInstance.showMessage("> \u00a7c", ...msg);
-      });
-      commandMgr.on("message", (...msg) => {
-        clientInstance.showMessage("> ", ...msg);
-      });
-      p.on("clientbound", ({ name, params }, des) => {
-        try {
-          switch (name) {
-            case "start_game":
-              Object.assign(gameData, params);
-              break;
-            case "game_rules_changed":
-              gameData.gamerules = params.rules;
-              break;
-            case "mob_equipment":
-              if (
-                params.runtime_entity_id == gameData.runtime_entity_id &&
-                params.selected_slot == params.slot
-              )
-                gameData.selected_item = params.item;
-              gameData.selected_slot = params.selected_slot;
-              break;
-            case "play_status":
-              if (params.status == "player_spawn") {
-                clientInstance.events.emit("spawn");
-                clientInstance.sendToast(
-                  tr("app.name.ingame"),
-                  tr("msg.toast.welcome")
-                );
-                logger.info(tr("player.spawned"));
-              }
-              break;
-            case "disconnect":
-              logger.info(
-                tr(
-                  "player.disconnected",
-                  params.reason,
-                  params.message ?? "(undefined)"
-                )
-              );
-              break;
-            case "player_list":
-              logger.info("player_list:", params);
-              switch (params.records.type) {
-                case "add":
-                  params.records.records.forEach((p) => {
-                    clientInstance.players[p.uuid] = p;
-                  });
-                  break;
-                case "remove":
-                  params.records.records.forEach((p) => {
-                    delete clientInstance.players[p.uuid];
-                  });
-                  break;
-              }
-              break;
-            case "add_player":
-              clientInstance.players[params.uuid] = params;
-              clientInstance.entityPlayers[params.runtime_id] = params;
-              clientInstance.__playerByName_mappings[params.username] =
-                params.runtime_id;
-              break;
-            case "move_player":
-              if (clientInstance.entityPlayers[params.runtime_id]) {
-                clientInstance.entityPlayers[params.runtime_id].position =
-                  params.position;
-                clientInstance.entityPlayers[params.runtime_id].dimension =
-                  gameData.dimension;
-              }
-              break;
-            case "change_dimension":
-              gameData.dimension = hardcoded_dimensions[params.dimension];
-              break;
-          }
-        } catch (e) {
-          logger.error(e);
-        }
-      });
-
-      p.on("serverbound", ({ name, params }, des) => {
-        try {
-          if (name == "text") {
-            console.log(params);
-            des.canceled = commandMgr.run(params.message);
-          }
-          if (name == "command_request") {
-            logger.debug(params);
-          }
-          if (name == "player_auth_input") {
-            if (!freeCam) gameData.player_position = params.position;
-            else {
-              cameraPos = cameraPos.add(
-                new Vector3(
-                  params.delta.x * cameraSpeed_,
-                  params.input_data.sneaking
-                    ? -1
-                    : params.input_data.jumping
-                    ? 1
-                    : 0,
-                  params.delta.z * cameraSpeed_
-                )
-              );
-              cameraRot = { x: params.pitch, z: params.head_yaw };
-              clientInstance.tp(
-                gameData.player_position,
-                params.pitch,
-                params.yaw,
-                params.head_yaw
-              );
-              //console.log(cameraPos)
-              camera.move(
-                { x: cameraPos.x, y: cameraPos.y, z: cameraPos.z },
-                cameraRot
-              );
-            }
-          }
-          if (name == "mob_equipment" && params.selected_slot == params.slot) {
-            gameData.selected_item = params.item;
-            gameData.selected_slot = params.selected_slot;
-          }
-          if (name == "inventory_transaction") {
-            console.log(params);
-          }
-          if (name == "adventure_settings") {
-            console.log(params);
-          }
-        } catch (e) {
-          logger.error(e);
-          clientInstance.showMessage("> \u00a7c", e.stack);
-        }
-      });
-    }
-  );
-  relay.listen().catch((error) => {
-    logger.error(error);
-    logger.info(
-      "代理发生错误，请检查您的地址是否正确或领域服正则表达式是否有效。"
-    );
-    process.exit(1);
-  });
-  //#region Banner
+);
+relay.listen().catch((error) => {
+  logger.error(error);
   logger.info(
-    `\n
+    "代理发生错误，请检查您的地址是否正确或领域服正则表达式是否有效。"
+  );
+  process.exit(1);
+});
+//#region Banner
+logger.info(
+  `\n
      ____   ____    _____   _____   ____    _____   ____      ____    _____   _          _     __   __
     / ___| |  _ \\  | ____| | ____| |  _ \\  | ____| |  _ \\    |  _ \\  | ____| | |        / \\    \\ \\ / /
    | |     | |_) | |  _|   |  _|   | |_) | |  _|   | |_) |   | |_) | |  _|   | |       / _ \\    \\ V / 
@@ -1237,10 +1301,9 @@ async function main() {
     ${tr("app.name")} -- a toolbox for Minecraft:Bedrock Edition
              By ${"HowieNB".rainbow}
     `.green
-  );
-  //#endregion
-  logger.info(tr("server.started"));
-}
+);
+//#endregion
+logger.info(tr("server.started"));
 //#endregion main
 main().catch((r) => {
   logger.error(r);

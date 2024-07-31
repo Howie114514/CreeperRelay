@@ -127,24 +127,25 @@ declare export type GameData = {
     is_sprinting: boolean
 };
 declare export let CommandManager: CommandManager;
-declare export type CreeperRelayContext = {
-    client:{
-        getGameData(): GameData;
-        sendMessage(...text: any[]): void;
-        showMessage(...text: any[]): void;
-        playerByName(name: string): void;
-        sendToast(title: string, text: string): void;
-        runCommand(command: string): void;
-        tp(pos: Vector3Like): void;
-        disconnect(): void;
-        interact(): void;
-        hitBlock(pos: Vector3Like): void;
-        swing(): void;
-        players: Record<UUID, NetworkPlayer>;
-        entityPlayers: Record<number | bigint, EntityPlayer>;
-        events:EventEmitter<{"spawn","disconnect","tick"}>;
-        connection:Connection;
+declare export type ClientInstance = {
+    getGameData(): GameData;
+    sendMessage(...text: any[]): void;
+    showMessage(...text: any[]): void;
+    playerByName(name: string): void;
+    sendToast(title: string, text: string): void;
+    runCommand(command: string): void;
+    tp(pos: Vector3Like): void;
+    disconnect(): void;
+    interact(): void;
+    hitBlock(pos: Vector3Like): void;
+    swing(): void;
+    players: Record<UUID, NetworkPlayer>;
+    entityPlayers: Record<number | bigint, EntityPlayer>;
+    events:EventEmitter<{"spawn","disconnect","tick"}>;
+    connection:Connection;
 };
+declare export type CreeperRelayContext = {
+    client:ClientInstance
 config:{
     getConfig<T extends Record>(fp:string,defaultConfig:T):T;
 }
