@@ -27,7 +27,7 @@ English|[简体中文](/readme-zh_cn.md)
 - Finding players
 
 ## TODO
-- [ ] Using resourcepacks
+- [x] Using resourcepacks
 - [ ] Sending forms
 - [ ] Decoding world data
   
