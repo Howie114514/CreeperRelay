@@ -7,3 +7,4 @@ songs/
 package-lock.json
 relay.zip
 relay.json
+resourcepacks/*.mcpack
